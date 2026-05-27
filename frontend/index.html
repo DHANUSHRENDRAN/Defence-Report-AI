@@ -487,8 +487,8 @@
         // ==========================================
         // 1. SUPABASE CONFIGURATION (REPLACE THESE!)
         // ==========================================
-        const SUPABASE_URL = "YOUR_SUPABASE_URL_HERE"; // e.g., https://xyz.supabase.co
-        const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY_HERE"; // The public anon key
+        const SUPABASE_URL = "https://ddycdvmqonjvurxeaeht.supabase.co"; // e.g., https://xyz.supabase.co
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkeWNkdm1xb25qdnVyeGVhZWh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4Nzg3NTUsImV4cCI6MjA5NTQ1NDc1NX0.8GWqwtrn2duPQ6VKOEXoWnT_i2NQz1yBNDO2WW-UNbg"; // The public anon key
 
         const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let sessionToken = null;
@@ -594,7 +594,7 @@
         // ==========================================
         // 4. API COMMUNICATION (FASTAPI)
         // ==========================================
-        const API_BASE = ""; // Since index.html is served by FastAPI, relative paths work
+        const API_BASE = "https://defence-report-ai.onrender.com"; // Since index.html is served by FastAPI, relative paths work
 
         async function loadHistory() {
             try {
@@ -744,4 +744,3 @@
 
 
 </html>
-
