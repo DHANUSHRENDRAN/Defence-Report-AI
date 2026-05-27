@@ -19,6 +19,7 @@ from supabase import create_client, Client
 from docx import Document
 from docx.shared import Pt, RGBColor, Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from fastapi.responses import FileResponse
 
 load_dotenv()
 
@@ -339,6 +340,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+@app.get("/")
+async def serve_ui():
+    """Serves the index.html file when someone visits the main Render link"""
+    return FileResponse("index.html")
 
 class GenerateRequest(BaseModel):
     topic: str
