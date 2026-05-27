@@ -1,10 +1,9 @@
 fastapi
 uvicorn
 pydantic
-langchain-core
-langchain-groq
-duckduckgo-search
-langchain-community
+groq
 beautifulsoup4
 python-dotenv
-requests
+httpx
+supabase
+python-docx
