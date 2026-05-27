@@ -484,86 +484,9 @@
     </div>
 
 
-    // 1. SUPABASE CONFIGURATION (REPLACE THESE!)
-    // ==========================================
-    const SUPABASE_URL = "https://ddycdvmqonjvurxeaeht.supabase.co"; // e.g., https://xyz.supabase.co
 
-    const SUPABASE_ANON_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkeWNkdm1xb25qdnVyeGVhZWh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4Nzg3NTUsImV4cCI6MjA5NTQ1NDc1NX0.8GWqwtrn2duPQ6VKOEXoWnT_i2NQz1yBNDO2WW-UNbg";
-    // The public anon key
 
-    // FIX: Renamed local variable to supaClient to prevent crashing
-    const supaClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    let sessionToken = null;
-    let isSignUpMode = false;
-    let currentReportId = null;
 
-    // ==========================================
-    // 2. AUTHENTICATION LOGIC
-    // ==========================================
-    async function checkSession() {
-    // FIX: Updated to supaClient
-    const { data, error } = await supaClient.auth.getSession();
-    if (data.session) {
-    sessionToken = data.session.access_token;
-    showApp();
-    loadHistory();
-    }
-    }
-    checkSession();
-
-    function toggleAuthMode() {
-    isSignUpMode = !isSignUpMode;
-    document.getElementById('auth-action-btn').innerText = isSignUpMode ? "Register" : "Login";
-    document.getElementById('auth-switch-btn').innerText = isSignUpMode ? "Existing Operative? Login" : "Request Access
-    (Sign Up)";
-    document.getElementById('auth-error').innerText = "";
-    }
-
-    async function handleAuth() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const errorDiv = document.getElementById('auth-error');
-    errorDiv.innerText = "Processing...";
-
-    try {
-    let result;
-    if (isSignUpMode) {
-    // FIX: Updated to supaClient
-    result = await supaClient.auth.signUp({ email, password });
-    if (result.data.user && !result.data.session) {
-    errorDiv.innerText = "Check email for verification link.";
-    return;
-    }
-    } else {
-    // FIX: Updated to supaClient
-    result = await supaClient.auth.signInWithPassword({ email, password });
-    }
-
-    if (result.error) throw result.error;
-
-    sessionToken = result.data.session.access_token;
-    showApp();
-    loadHistory();
-    } catch (err) {
-    errorDiv.innerText = err.message;
-    }
-    }
-
-    async function logout() {
-    // FIX: Updated to supaClient
-    await supaClient.auth.signOut();
-    sessionToken = null;
-    document.getElementById('app-view').style.display = 'none';
-    document.getElementById('auth-view').style.display = 'flex';
-    }
-
-    function showApp() {
-    document.getElementById('auth-view').style.display = 'none';
-    document.getElementById('app-view').style.display = 'flex';
-    }
-
-    <!-- 
     <script>
         // ==========================================
         // 1. SUPABASE CONFIGURATION (REPLACE THESE!)
@@ -635,132 +558,133 @@
         function showApp() {
             document.getElementById('auth-view').style.display = 'none';
             document.getElementById('app-view').style.display = 'flex';
-        } -->
+        } 
 
-    // ==========================================
-    // 3. THEME & UI LOGIC
-    // ==========================================
-    function toggleTheme() {
-    const body = document.body;
-    body.classList.toggle('dark-mode');
-    const btn = document.getElementById('theme-btn');
-    btn.innerText = body.classList.contains('dark-mode') ? 'DRK' : 'LGT';
-    }
+        // ==========================================
+        // 3. THEME & UI LOGIC
+        // ==========================================
+        function toggleTheme() {
+            const body = document.body;
+            body.classList.toggle('dark-mode');
+            const btn = document.getElementById('theme-btn');
+            btn.innerText = body.classList.contains('dark-mode') ? 'DRK' : 'LGT';
+        }
 
-    const phases = [
-    "CALCULATING TEMPORAL VECTORS...",
-    "DEPLOYING REGIONAL SCRAPERS...",
-    "EXTRACTING RAW DATA...",
-    "70B BRAIN OUTLINING...",
-    "8B INSTANT DRAFTING CHAPTERS..."
-    ];
-    let tickerInterval;
+        const phases = [
+            "CALCULATING TEMPORAL VECTORS...",
+            "DEPLOYING REGIONAL SCRAPERS...",
+            "EXTRACTING RAW DATA...",
+            "70B BRAIN OUTLINING...",
+            "8B INSTANT DRAFTING CHAPTERS..."
+        ];
+        let tickerInterval;
 
-    function startTicker() {
-    const ticker = document.getElementById('status-ticker');
-    const text = document.getElementById('status-text');
-    ticker.style.visibility = 'visible';
-    let i = 0;
-    text.innerText = phases[0];
-    tickerInterval = setInterval(() => {
-    i = (i + 1) % phases.length;
-    text.innerText = phases[i];
-    }, 3500);
-    }
+        function startTicker() {
+            const ticker = document.getElementById('status-ticker');
+            const text = document.getElementById('status-text');
+            ticker.style.visibility = 'visible';
+            let i = 0;
+            text.innerText = phases[0];
+            tickerInterval = setInterval(() => {
+                i = (i + 1) % phases.length;
+                text.innerText = phases[i];
+            }, 3500);
+        }
 
-    function stopTicker() {
-    clearInterval(tickerInterval);
-    document.getElementById('status-ticker').style.visibility = 'hidden';
-    }
+        function stopTicker() {
+            clearInterval(tickerInterval);
+            document.getElementById('status-ticker').style.visibility = 'hidden';
+        }
 
-    // ==========================================
-    // 4. API COMMUNICATION (FASTAPI)
-    // ==========================================
-    const API_BASE = ""; // Since index.html is served by FastAPI, relative paths work
+        // ==========================================
+        // 4. API COMMUNICATION (FASTAPI)
+        // ==========================================
+        const API_BASE = "https://defence-report-ai.onrender.com"; // Since index.html is served by FastAPI, relative paths
+        work
 
-    async function loadHistory() {
-    try {
-    const res = await fetch(`${API_BASE}/reports`, {
-    headers: { 'Authorization': `Bearer ${sessionToken}` }
-    });
-    if (!res.ok) throw new Error("Failed to load history");
-    const reports = await res.json();
+        async function loadHistory() {
+            try {
+                const res = await fetch(`${API_BASE}/reports`, {
+                    headers: { 'Authorization': `Bearer ${sessionToken}` }
+                });
+                if (!res.ok) throw new Error("Failed to load history");
+                const reports = await res.json();
 
-    const list = document.getElementById('history-list');
-    list.innerHTML = '';
-    reports.forEach(r => {
-    const btn = document.createElement('button');
-    btn.className = 'history-item';
-    const date = new Date(r.created_at).toLocaleDateString();
-    btn.innerText = `[${date}] ${r.title}`;
-    btn.onclick = () => fetchAndDisplayReport(r.id, btn);
-    list.appendChild(btn);
-    });
-    } catch (err) {
-    console.error(err);
-    }
-    }
+                const list = document.getElementById('history-list');
+                list.innerHTML = '';
+                reports.forEach(r => {
+                    const btn = document.createElement('button');
+                    btn.className = 'history-item';
+                    const date = new Date(r.created_at).toLocaleDateString();
+                    btn.innerText = `[${date}] ${r.title}`;
+                    btn.onclick = () => fetchAndDisplayReport(r.id, btn);
+                    list.appendChild(btn);
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
 
-    async function executeGeneration() {
-    const input = document.getElementById('topic-input');
-    const topic = input.value.trim();
-    if (!topic) return;
+        async function executeGeneration() {
+            const input = document.getElementById('topic-input');
+            const topic = input.value.trim();
+            if (!topic) return;
 
-    const btn = document.getElementById('execute-btn');
-    const viewport = document.getElementById('content-viewport');
+            const btn = document.getElementById('execute-btn');
+            const viewport = document.getElementById('content-viewport');
 
-    btn.disabled = true;
-    viewport.classList.add('loading-overlay');
-    startTicker();
+            btn.disabled = true;
+            viewport.classList.add('loading-overlay');
+            startTicker();
 
-    try {
-    const res = await fetch(`${API_BASE}/generate`, {
-    method: 'POST',
-    headers: {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${sessionToken}`
-    },
-    body: JSON.stringify({ topic })
-    });
+            try {
+                const res = await fetch(`${API_BASE}/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${sessionToken}`
+                    },
+                    body: JSON.stringify({ topic })
+                });
 
-    if (!res.ok) throw new Error("API Error");
-    const newReport = await res.json();
+                if (!res.ok) throw new Error("API Error");
+                const newReport = await res.json();
 
-    input.value = '';
-    loadHistory(); // Refresh sidebar
-    renderReport(newReport);
-    } catch (err) {
-    alert("Execution failed. Check backend logs or token limits.");
-    } finally {
-    btn.disabled = false;
-    viewport.classList.remove('loading-overlay');
-    stopTicker();
-    }
-    }
+                input.value = '';
+                loadHistory(); // Refresh sidebar
+                renderReport(newReport);
+            } catch (err) {
+                alert("Execution failed. Check backend logs or token limits.");
+            } finally {
+                btn.disabled = false;
+                viewport.classList.remove('loading-overlay');
+                stopTicker();
+            }
+        }
 
-    async function fetchAndDisplayReport(id, btnElement) {
-    // Update active state in sidebar
-    document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
-    if (btnElement) btnElement.classList.add('active');
+        async function fetchAndDisplayReport(id, btnElement) {
+            // Update active state in sidebar
+            document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
+            if (btnElement) btnElement.classList.add('active');
 
-    try {
-    const res = await fetch(`${API_BASE}/reports/${id}`, {
-    headers: { 'Authorization': `Bearer ${sessionToken}` }
-    });
-    const report = await res.json();
-    renderReport(report);
-    } catch (err) {
-    alert("Failed to load report data.");
-    }
-    }
+            try {
+                const res = await fetch(`${API_BASE}/reports/${id}`, {
+                    headers: { 'Authorization': `Bearer ${sessionToken}` }
+                });
+                const report = await res.json();
+                renderReport(report);
+            } catch (err) {
+                alert("Failed to load report data.");
+            }
+        }
 
-    function renderReport(report) {
-    currentReportId = report.id;
-    const viewport = document.getElementById('content-viewport');
+        function renderReport(report) {
+            currentReportId = report.id;
+            const viewport = document.getElementById('content-viewport');
 
-    const dateStr = new Date(report.created_at || Date.now()).toLocaleString();
+            const dateStr = new Date(report.created_at || Date.now()).toLocaleString();
 
-    let html = `
+            let html = `
     <h1>${report.title}</h1>
     <div class="meta-bar">
         <span>TARGET: ${report.topic || 'Archived'}</span>
@@ -784,47 +708,47 @@
         </button>
     </div>
     `;
-    viewport.innerHTML = html;
-    viewport.scrollTo(0, 0);
-    }
+            viewport.innerHTML = html;
+            viewport.scrollTo(0, 0);
+        }
 
-    async function downloadDocx(id) {
-    window.location.href = `${API_BASE}/reports/${id}/docx?authorization=Bearer ${sessionToken}`;
-    // Note: For a true SPA with auth headers, fetching as blob is better.
-    // Since FastAPI checks headers, we do a fetch blob approach:
-    try {
-    const res = await fetch(`${API_BASE}/reports/${id}/docx`, {
-    headers: { 'Authorization': `Bearer ${sessionToken}` }
-    });
-    if (!res.ok) throw new Error("Download failed");
-    const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    // Get filename from header if possible, else default
-    a.download = `OSINT_Report.docx`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    window.URL.revokeObjectURL(url);
-    } catch (err) {
-    alert("Download failed.");
-    }
-    }
+        async function downloadDocx(id) {
+            window.location.href = `${API_BASE}/reports/${id}/docx?authorization=Bearer ${sessionToken}`;
+            // Note: For a true SPA with auth headers, fetching as blob is better.
+            // Since FastAPI checks headers, we do a fetch blob approach:
+            try {
+                const res = await fetch(`${API_BASE}/reports/${id}/docx`, {
+                    headers: { 'Authorization': `Bearer ${sessionToken}` }
+                });
+                if (!res.ok) throw new Error("Download failed");
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                // Get filename from header if possible, else default
+                a.download = `OSINT_Report.docx`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            } catch (err) {
+                alert("Download failed.");
+            }
+        }
 
-    async function deleteReport(id) {
-    if (!confirm("Erase this intelligence record permanently?")) return;
-    try {
-    await fetch(`${API_BASE}/reports/${id}`, {
-    method: 'DELETE',
-    headers: { 'Authorization': `Bearer ${sessionToken}` }
-    });
-    document.getElementById('content-viewport').innerHTML = '';
-    loadHistory();
-    } catch (err) {
-    alert("Failed to delete record.");
-    }
-    }
+        async function deleteReport(id) {
+            if (!confirm("Erase this intelligence record permanently?")) return;
+            try {
+                await fetch(`${API_BASE}/reports/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${sessionToken}` }
+                });
+                document.getElementById('content-viewport').innerHTML = '';
+                loadHistory();
+            } catch (err) {
+                alert("Failed to delete record.");
+            }
+        }
     </script>
 </body>
 
