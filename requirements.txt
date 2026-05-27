@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+pydantic
+langchain-core
+langchain-groq
+duckduckgo-search
+langchain-community
+beautifulsoup4
+python-dotenv
+requests

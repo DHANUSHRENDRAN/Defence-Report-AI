@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSINT | Tactical Intelligence</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Lora:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap"
+        rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        /* AESTHETIC DIRECTION: EDITORIAL BRUTALISM */
+        :root {
+            /* Light Theme (Default) - Newspaper/Paper aesthetic */
+            --bg: #F4F4F0;
+            --surface: #FFFFFF;
+            --text-main: #0A0A0A;
+            --text-muted: #555555;
+            --border: #0A0A0A;
+            --accent: #E63946;
+            /* Striking Crimson */
+        }
+
+        body.dark-mode {
+            /* Dark Theme (Terminal/Classified aesthetic) */
+            --bg: #050505;
+            --surface: #0A0A0A;
+            --text-main: #F4F4F0;
+            --text-muted: #888888;
+            --border: #333333;
+            --accent: #FF4D4D;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background-color: var(--bg);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+            transition: background-color 0.3s, color 0.3s;
+            /* Subtle grid texture */
+            background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 100px 100px;
+            background-position: -1px -1px;
+        }
+
+        /* --- AUTHENTICATION VIEW --- */
+        #auth-view {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .auth-card {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            padding: 40px;
+            width: 400px;
+            box-shadow: 12px 12px 0px var(--border);
+            /* Brutalist shadow */
+        }
+
+        .auth-card h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: 2rem;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+        }
+
+        .auth-card p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            font-family: 'JetBrains Mono';
+        }
+
+        .auth-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 15px;
+            background: var(--text-main);
+            color: var(--bg);
+            border: none;
+            font-family: 'JetBrains Mono';
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            transition: transform 0.1s;
+        }
+
+        .auth-btn:active {
+            transform: translateY(2px);
+        }
+
+        .auth-toggle {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            text-decoration: underline;
+            font-family: 'JetBrains Mono';
+            font-size: 0.8rem;
+            width: 100%;
+            text-align: center;
+        }
+
+        /* --- APP VIEW --- */
+        #app-view {
+            display: none;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* SIDEBAR */
+        #sidebar {
+            width: 300px;
+            background: var(--surface);
+            border-right: 2px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-header h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+        }
+
+        .icon-btn {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 5px 10px;
+            cursor: pointer;
+            font-family: 'JetBrains Mono';
+            font-weight: bold;
+        }
+
+        .icon-btn:hover {
+            background: var(--text-main);
+            color: var(--bg);
+        }
+
+        #history-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .history-item {
+            width: 100%;
+            text-align: left;
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            padding: 12px 10px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            font-family: 'JetBrains Mono';
+            font-size: 0.8rem;
+            transition: all 0.2s;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-item:hover {
+            border: 1px solid var(--border);
+            color: var(--text-main);
+        }
+
+        .history-item.active {
+            background: var(--text-main);
+            color: var(--bg);
+            font-weight: bold;
+        }
+
+        #logout-btn {
+            padding: 15px;
+            background: transparent;
+            border-top: 2px solid var(--border);
+            border-bottom: none;
+            border-left: none;
+            border-right: none;
+            color: var(--accent);
+            cursor: pointer;
+            font-family: 'JetBrains Mono';
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        /* MAIN WORKSPACE */
+        #workspace {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background: var(--bg);
+        }
+
+        /* CONTROL DECK (LOCKED TO TOP) */
+        #control-deck {
+            background: var(--surface);
+            border-bottom: 2px solid var(--border);
+            padding: 25px 5%;
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 0;
+            border: 2px solid var(--border);
+            box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.05);
+        }
+
+        body.dark-mode .input-row {
+            box-shadow: 6px 6px 0px rgba(255, 255, 255, 0.05);
+        }
+
+        #topic-input {
+            flex: 1;
+            padding: 20px;
+            border: none;
+            background: transparent;
+            color: var(--text-main);
+            font-family: 'JetBrains Mono';
+            font-size: 1rem;
+        }
+
+        #topic-input:focus {
+            outline: none;
+        }
+
+        #execute-btn {
+            padding: 0 40px;
+            background: var(--text-main);
+            color: var(--bg);
+            border: none;
+            border-left: 2px solid var(--border);
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+
+        #execute-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* CYCLING STATUS TICKER */
+        #status-ticker {
+            margin-top: 15px;
+            font-size: 0.85rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 1px;
+            min-height: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .blinking-cursor {
+            display: inline-block;
+            width: 8px;
+            height: 15px;
+            background-color: var(--accent);
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+        }
+
+        /* CONTENT AREA (EDITORIAL READING EXPERIENCE) */
+        #content-viewport {
+            flex: 1;
+            padding: 40px 10% 100px 10%;
+            overflow-y: auto;
+            font-family: 'Lora', serif;
+            /* Serif font for deep reading */
+            font-size: 1.15rem;
+            line-height: 1.8;
+            color: var(--text-main);
+        }
+
+        /* MASSIVE HEADINGS */
+        #content-viewport h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: 4rem;
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -2px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .meta-bar {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 0;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            display: flex;
+            gap: 20px;
+        }
+
+        #content-viewport h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-top: 50px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--text-main);
+            padding-bottom: 10px;
+        }
+
+        #content-viewport h3 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.2rem;
+            margin-top: 30px;
+        }
+
+        #content-viewport p {
+            margin-bottom: 25px;
+        }
+
+        #content-viewport ul {
+            margin-bottom: 25px;
+            padding-left: 20px;
+        }
+
+        #content-viewport li {
+            margin-bottom: 10px;
+        }
+
+        /* ACTION BAR (DOCX DOWNLOAD) */
+        .action-bar {
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 2px dashed var(--border);
+            display: flex;
+            gap: 15px;
+        }
+
+        .action-btn {
+            padding: 15px 30px;
+            background: transparent;
+            border: 2px solid var(--border);
+            color: var(--text-main);
+            font-family: 'JetBrains Mono';
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .action-btn:hover {
+            background: var(--text-main);
+            color: var(--bg);
+        }
+
+        .loading-overlay {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="auth-view">
+        <div class="auth-card">
+            <h1>OSINT Core</h1>
+            <p id="auth-subtitle">Secure Gateway. Authenticate to proceed.</p>
+            <input type="email" id="email" class="auth-input" placeholder="OPERATIVE EMAIL">
+            <input type="password" id="password" class="auth-input" placeholder="PASSPHRASE">
+            <button id="auth-action-btn" class="auth-btn" onclick="handleAuth()">Login</button>
+            <button id="auth-switch-btn" class="auth-toggle" onclick="toggleAuthMode()">Request Access (Sign
+                Up)</button>
+            <div id="auth-error" style="color: var(--accent); font-size: 0.8rem; margin-top: 10px; text-align: center;">
+            </div>
+        </div>
+    </div>
+
+    <div id="app-view">
+        <div id="sidebar">
+            <div class="sidebar-header">
+                <h2>Archives</h2>
+                <button class="icon-btn" onclick="toggleTheme()" id="theme-btn">LGT</button>
+            </div>
+            <div id="history-list"></div>
+            <button id="logout-btn" onclick="logout()">Terminate Session</button>
+        </div>
+
+        <div id="workspace">
+            <div id="control-deck">
+                <div class="input-row">
+                    <input type="text" id="topic-input"
+                        placeholder="DEFINE INTELLIGENCE TARGET (e.g., Eurofighter Typhoon budget cuts 2026, 1500 words)..."
+                        autocomplete="off">
+                    <button id="execute-btn" onclick="executeGeneration()">Initialize</button>
+                </div>
+                <div id="status-ticker" style="visibility: hidden;">
+                    <span id="status-text">STANDING BY</span><span class="blinking-cursor"></span>
+                </div>
+            </div>
+
+            <div id="content-viewport">
+                <div
+                    style="height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--text-muted); font-family: 'JetBrains Mono'; text-transform: uppercase; text-align: center;">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"
+                        style="margin-bottom: 20px;">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="2" x2="12" y2="22"></line>
+                        <line x1="2" y1="12" x2="22" y2="12"></line>
+                    </svg>
+                    <p>Awaiting Target Parameters.<br>System ready for deep temporal extraction.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. SUPABASE CONFIGURATION (REPLACE THESE!)
+        // ==========================================
+        const SUPABASE_URL = "YOUR_SUPABASE_URL_HERE"; // e.g., https://xyz.supabase.co
+        const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY_HERE"; // The public anon key
+
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let sessionToken = null;
+        let isSignUpMode = false;
+        let currentReportId = null;
+
+        // ==========================================
+        // 2. AUTHENTICATION LOGIC
+        // ==========================================
+        async function checkSession() {
+            const { data, error } = await supabase.auth.getSession();
+            if (data.session) {
+                sessionToken = data.session.access_token;
+                showApp();
+                loadHistory();
+            }
+        }
+        checkSession();
+
+        function toggleAuthMode() {
+            isSignUpMode = !isSignUpMode;
+            document.getElementById('auth-action-btn').innerText = isSignUpMode ? "Register" : "Login";
+            document.getElementById('auth-switch-btn').innerText = isSignUpMode ? "Existing Operative? Login" : "Request Access (Sign Up)";
+            document.getElementById('auth-error').innerText = "";
+        }
+
+        async function handleAuth() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('auth-error');
+            errorDiv.innerText = "Processing...";
+
+            try {
+                let result;
+                if (isSignUpMode) {
+                    result = await supabase.auth.signUp({ email, password });
+                    if (result.data.user && !result.data.session) {
+                        errorDiv.innerText = "Check email for verification link.";
+                        return;
+                    }
+                } else {
+                    result = await supabase.auth.signInWithPassword({ email, password });
+                }
+
+                if (result.error) throw result.error;
+
+                sessionToken = result.data.session.access_token;
+                showApp();
+                loadHistory();
+            } catch (err) {
+                errorDiv.innerText = err.message;
+            }
+        }
+
+        async function logout() {
+            await supabase.auth.signOut();
+            sessionToken = null;
+            document.getElementById('app-view').style.display = 'none';
+            document.getElementById('auth-view').style.display = 'flex';
+        }
+
+        function showApp() {
+            document.getElementById('auth-view').style.display = 'none';
+            document.getElementById('app-view').style.display = 'flex';
+        }
+
+        // ==========================================
+        // 3. THEME & UI LOGIC
+        // ==========================================
+        function toggleTheme() {
+            const body = document.body;
+            body.classList.toggle('dark-mode');
+            const btn = document.getElementById('theme-btn');
+            btn.innerText = body.classList.contains('dark-mode') ? 'DRK' : 'LGT';
+        }
+
+        const phases = [
+            "CALCULATING TEMPORAL VECTORS...",
+            "DEPLOYING REGIONAL SCRAPERS...",
+            "EXTRACTING RAW DATA...",
+            "70B BRAIN OUTLINING...",
+            "8B INSTANT DRAFTING CHAPTERS..."
+        ];
+        let tickerInterval;
+
+        function startTicker() {
+            const ticker = document.getElementById('status-ticker');
+            const text = document.getElementById('status-text');
+            ticker.style.visibility = 'visible';
+            let i = 0;
+            text.innerText = phases[0];
+            tickerInterval = setInterval(() => {
+                i = (i + 1) % phases.length;
+                text.innerText = phases[i];
+            }, 3500);
+        }
+
+        function stopTicker() {
+            clearInterval(tickerInterval);
+            document.getElementById('status-ticker').style.visibility = 'hidden';
+        }
+
+        // ==========================================
+        // 4. API COMMUNICATION (FASTAPI)
+        // ==========================================
+        const API_BASE = ""; // Since index.html is served by FastAPI, relative paths work
+
+        async function loadHistory() {
+            try {
+                const res = await fetch(`${API_BASE}/reports`, {
+                    headers: { 'Authorization': `Bearer ${sessionToken}` }
+                });
+                if (!res.ok) throw new Error("Failed to load history");
+                const reports = await res.json();
+
+                const list = document.getElementById('history-list');
+                list.innerHTML = '';
+                reports.forEach(r => {
+                    const btn = document.createElement('button');
+                    btn.className = 'history-item';
+                    const date = new Date(r.created_at).toLocaleDateString();
+                    btn.innerText = `[${date}] ${r.title}`;
+                    btn.onclick = () => fetchAndDisplayReport(r.id, btn);
+                    list.appendChild(btn);
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function executeGeneration() {
+            const input = document.getElementById('topic-input');
+            const topic = input.value.trim();
+            if (!topic) return;
+
+            const btn = document.getElementById('execute-btn');
+            const viewport = document.getElementById('content-viewport');
+
+            btn.disabled = true;
+            viewport.classList.add('loading-overlay');
+            startTicker();
+
+            try {
+                const res = await fetch(`${API_BASE}/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${sessionToken}`
+                    },
+                    body: JSON.stringify({ topic })
+                });
+
+                if (!res.ok) throw new Error("API Error");
+                const newReport = await res.json();
+
+                input.value = '';
+                loadHistory(); // Refresh sidebar
+                renderReport(newReport);
+            } catch (err) {
+                alert("Execution failed. Check backend logs or token limits.");
+            } finally {
+                btn.disabled = false;
+                viewport.classList.remove('loading-overlay');
+                stopTicker();
+            }
+        }
+
+        async function fetchAndDisplayReport(id, btnElement) {
+            // Update active state in sidebar
+            document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
+            if (btnElement) btnElement.classList.add('active');
+
+            try {
+                const res = await fetch(`${API_BASE}/reports/${id}`, {
+                    headers: { 'Authorization': `Bearer ${sessionToken}` }
+                });
+                const report = await res.json();
+                renderReport(report);
+            } catch (err) {
+                alert("Failed to load report data.");
+            }
+        }
+
+        function renderReport(report) {
+            currentReportId = report.id;
+            const viewport = document.getElementById('content-viewport');
+
+            const dateStr = new Date(report.created_at || Date.now()).toLocaleString();
+
+            let html = `
+                <h1>${report.title}</h1>
+                <div class="meta-bar">
+                    <span>TARGET: ${report.topic || 'Archived'}</span>
+                    <span>WORDS: ${report.word_count || 'N/A'}</span>
+                    <span>TS: ${dateStr}</span>
+                </div>
+                ${marked.parse(report.content)}
+                
+                <div class="action-bar">
+                    <button class="action-btn" onclick="downloadDocx('${report.id}')">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        DOWNLOAD .DOCX
+                    </button>
+                    <button class="action-btn" onclick="deleteReport('${report.id}')" style="color: var(--accent); border-color: var(--accent);">
+                        DELETE RECORD
+                    </button>
+                </div>
+            `;
+            viewport.innerHTML = html;
+            viewport.scrollTo(0, 0);
+        }
+
+        async function downloadDocx(id) {
+            window.location.href = `${API_BASE}/reports/${id}/docx?authorization=Bearer ${sessionToken}`;
+            // Note: For a true SPA with auth headers, fetching as blob is better. 
+            // Since FastAPI checks headers, we do a fetch blob approach:
+            try {
+                const res = await fetch(`${API_BASE}/reports/${id}/docx`, {
+                    headers: { 'Authorization': `Bearer ${sessionToken}` }
+                });
+                if (!res.ok) throw new Error("Download failed");
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                // Get filename from header if possible, else default
+                a.download = `OSINT_Report.docx`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            } catch (err) {
+                alert("Download failed.");
+            }
+        }
+
+        async function deleteReport(id) {
+            if (!confirm("Erase this intelligence record permanently?")) return;
+            try {
+                await fetch(`${API_BASE}/reports/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${sessionToken}` }
+                });
+                document.getElementById('content-viewport').innerHTML = '';
+                loadHistory();
+            } catch (err) {
+                alert("Failed to delete record.");
+            }
+        }
+    </script>
+</body>
+
+</html>
