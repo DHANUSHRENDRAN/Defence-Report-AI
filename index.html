@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
+    <!-- <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OSINT | Tactical Intelligence</title>
 
@@ -12,8 +13,31 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+    <link rel="stylesheet" href="styles.css"> -->
+
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&family=Lora:ital,wght@0,400;0,700;1,400&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="styles.css">
+
+    <div class="sidebar-header">
+        <h2>Archives</h2>
+        <button class="icon-btn" onclick="toggleTheme()" id="theme-btn" title="Toggle Theme">
+            <svg id="theme-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+        </button>
+    </div>
+    <div id="history-list"></div>
+    <button id="logout-btn" onclick="logout()">Log Out</button>
 </head>
+
 <body>
     <div id="auth-view">
         <div class="auth-card">
@@ -22,8 +46,10 @@
             <input type="email" id="email" class="auth-input" placeholder="OPERATIVE EMAIL">
             <input type="password" id="password" class="auth-input" placeholder="PASSPHRASE">
             <button id="auth-action-btn" class="auth-btn" onclick="handleAuth()">Login</button>
-            <button id="auth-switch-btn" class="auth-toggle" onclick="toggleAuthMode()">Request Access (Sign Up)</button>
-            <div id="auth-error" style="color: var(--accent); font-size: 0.8rem; margin-top: 10px; text-align: center;"></div>
+            <button id="auth-switch-btn" class="auth-toggle" onclick="toggleAuthMode()">Request Access (Sign
+                Up)</button>
+            <div id="auth-error" style="color: var(--accent); font-size: 0.8rem; margin-top: 10px; text-align: center;">
+            </div>
         </div>
     </div>
 
@@ -40,8 +66,9 @@
         <div id="workspace">
             <div id="control-deck">
                 <div class="input-row">
-                    <input type="text" id="topic-input" placeholder="DEFINE INTELLIGENCE TARGET (e.g., Eurofighter Typhoon budget cuts 2026, 1500 words)..." autocomplete="off">
-                    <button id="execute-btn" onclick="executeGeneration()">Initialize</button>
+                    <input type="text" id="topic-input" placeholder="What intelligence target should we analyze today?"
+                        autocomplete="off">
+                    <button id="execute-btn" onclick="executeGeneration()">Generate</button>
                 </div>
                 <div id="status-ticker" style="visibility: hidden;">
                     <span id="status-text">STANDING BY</span><span class="blinking-cursor"></span>
@@ -49,8 +76,10 @@
             </div>
 
             <div id="content-viewport">
-                <div style="height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--text-muted); font-family: 'JetBrains Mono'; text-transform: uppercase; text-align: center;">
-                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin-bottom: 20px;">
+                <div
+                    style="height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--text-muted); font-family: 'JetBrains Mono'; text-transform: uppercase; text-align: center;">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"
+                        style="margin-bottom: 20px;">
                         <circle cx="12" cy="12" r="10"></circle>
                         <line x1="12" y1="2" x2="12" y2="22"></line>
                         <line x1="2" y1="12" x2="22" y2="12"></line>
@@ -63,6 +92,7 @@
 
     <script src="app.js" defer></script>
 </body>
+
 </html>
 
 
@@ -1108,4 +1138,4 @@
     </script> -->
 <!-- </body>
 
-</html> --> 
+</html> -->

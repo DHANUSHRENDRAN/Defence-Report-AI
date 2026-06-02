@@ -73,12 +73,28 @@ function showApp() {
 // ==========================================
 // 3. THEME & UI LOGIC
 // ==========================================
+// window.toggleTheme = function () {
+//     const body = document.body;
+//     body.classList.toggle('dark-mode');
+//     const btn = document.getElementById('theme-btn');
+//     btn.innerText = body.classList.contains('dark-mode') ? 'DRK' : 'LGT';
+// }
+
+
 window.toggleTheme = function () {
     const body = document.body;
     body.classList.toggle('dark-mode');
-    const btn = document.getElementById('theme-btn');
-    btn.innerText = body.classList.contains('dark-mode') ? 'DRK' : 'LGT';
+    const icon = document.getElementById('theme-icon');
+
+    if (body.classList.contains('dark-mode')) {
+        // Change to Sun Icon
+        icon.innerHTML = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+    } else {
+        // Change to Moon Icon
+        icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+    }
 }
+
 
 const phases = [
     "CALCULATING TEMPORAL VECTORS...",
@@ -184,10 +200,26 @@ window.fetchAndDisplayReport = async function (id, btnElement) {
     }
 }
 
+
+
+
 function renderReport(report) {
     currentReportId = report.id;
     const viewport = document.getElementById('content-viewport');
     const dateStr = new Date(report.created_at || Date.now()).toLocaleString();
+
+    // Build the collapsible sources HTML if sources exist
+    let sourcesHtml = '';
+    if (report.sources && report.sources.length > 0) {
+        let links = report.sources.map(s => `<li><a href="${s}" target="_blank" style="color: var(--accent);">${s}</a></li>`).join('');
+        sourcesHtml = `
+        <details style="margin-top: 40px; margin-bottom: 20px; border: 1px solid var(--border); padding: 15px; cursor: pointer; font-family: 'Inter', sans-serif;">
+            <summary style="font-family: 'JetBrains Mono'; font-weight: bold; text-transform: uppercase; outline: none;">[+] View Intelligence Sources</summary>
+            <ul style="margin-top: 15px; font-size: 0.9rem; word-break: break-all; padding-left: 20px;">
+                ${links}
+            </ul>
+        </details>`;
+    }
 
     let html = `
         <h1>${report.title}</h1>
@@ -197,9 +229,11 @@ function renderReport(report) {
             <span>TS: ${dateStr}</span>
         </div>
         ${marked.parse(report.content)}
+        
+        ${sourcesHtml}
 
         <div class="action-bar">
-            <button class="action-btn" onclick="downloadDocx('${report.id}')">
+            <button class="action-btn" onclick="downloadDocx('${report.id}', \`${report.topic || 'Report'}\`)">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                     <polyline points="7 10 12 15 17 10"></polyline>
@@ -216,7 +250,29 @@ function renderReport(report) {
     viewport.scrollTo(0, 0);
 }
 
-window.downloadDocx = async function (id) {
+// window.downloadDocx = async function (id) {
+//     try {
+//         const res = await fetch(`${API_BASE}/reports/${id}/docx`, {
+//             headers: { 'Authorization': `Bearer ${sessionToken}` }
+//         });
+//         if (!res.ok) throw new Error("Download failed");
+//         const blob = await res.blob();
+//         const url = window.URL.createObjectURL(blob);
+//         const a = document.createElement('a');
+//         a.href = url;
+//         a.download = `OSINT_Report.docx`;
+//         document.body.appendChild(a);
+//         a.click();
+//         a.remove();
+//         window.URL.revokeObjectURL(url);
+//     } catch (err) {
+//         alert("Download failed.");
+//     }
+// }
+
+
+
+window.downloadDocx = async function (id, topicText) {
     try {
         const res = await fetch(`${API_BASE}/reports/${id}/docx`, {
             headers: { 'Authorization': `Bearer ${sessionToken}` }
@@ -226,7 +282,14 @@ window.downloadDocx = async function (id) {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `OSINT_Report.docx`;
+
+        // Generate clean dynamic filename from the first 3 words of the topic
+        let cleanName = "OSINT";
+        if (topicText && topicText !== 'Report') {
+            cleanName = topicText.split(' ').slice(0, 3).join('_').replace(/[^a-zA-Z0-9_]/g, '').toLowerCase();
+        }
+        a.download = `${cleanName}_report.docx`;
+
         document.body.appendChild(a);
         a.click();
         a.remove();
@@ -235,6 +298,7 @@ window.downloadDocx = async function (id) {
         alert("Download failed.");
     }
 }
+
 
 window.deleteReport = async function (id) {
     if (!confirm("Erase this intelligence record permanently?")) return;
