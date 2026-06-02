@@ -85,7 +85,8 @@ _REGION_MAP: dict[str, list[str]] = {
            "downing street", "moi uk"],
     "in": ["india", "indian", "tejas", "drdo", "isro", "modi", "delhi", "mumbai",
            "indian army", "iaf", "ins ", "rupee"],
-    "de": ["germany", "german", "bundeswehr", "luftwaffe", "berlin", "scholz"],
+    #"de": ["germany", "german", "bundeswehr", "luftwaffe", "berlin", "scholz"],
+    "de": ["germany", "german", "bundeswehr", "luftwaffe", "berlin", "merz"],
     "fr": ["france", "french", "rafale", "macron", "paris", "armée"],
     "cn": ["china", "chinese", "pla", "beijing", "xi jinping", "renminbi", "taiwan strait"],
     "ru": ["russia", "russian", "kremlin", "moscow", "putin", "sukhoi", "rosoboronexport"],
@@ -181,7 +182,7 @@ Rules:
     resp = groq_client.chat.completions.create(
         model=BRAIN,
         messages=[{"role": "user", "content": prompt}],
-        max_tokens=BRAIN_MAXTOK,
+        max_tokens=4000,
         temperature=0.15,
         response_format={"type": "json_object"},
     )
