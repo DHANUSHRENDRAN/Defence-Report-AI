@@ -191,16 +191,28 @@ Rules:
 # ─────────────────────────────────────────────────────────────────────────────
 #  LLM — OUTLINE  (brain 70b)
 # ─────────────────────────────────────────────────────────────────────────────
+
 def llm_outline(topic: str, intel_preview: str, word_count: int, domain: str) -> dict:
     n_chapters = 3 if word_count <= 900 else (5 if word_count <= 2500 else 7)
     wpch = max(150, word_count // n_chapters)
 
-    prompt = f"""Topic: "{topic}"
+    system_prompt = """You are an elite OSINT military intelligence planner.
+    
+    CRITICAL GUARDRAIL: If the user's topic is NOT related to military hardware, geopolitics, defense budgets, national security, or warfare, YOU MUST REJECT IT. 
+    If rejected, output ONLY this JSON: {"error": "TOPIC REJECTED: Target falls outside military and strategic intelligence parameters."}
+    
+    If the topic IS valid, generate a structural outline.
+    CRITICAL CONSTRAINTS:
+    1. Output strictly in JSON format.
+    2. Do not use markdown tables under any circumstances.
+    3. Keep chapter titles concise to preserve system memory."""
+
+    user_prompt = f"""Topic: "{topic}"
 Domain: {domain}
 Target: {word_count} words | Chapters: {n_chapters}
 Intel sample: {intel_preview[:1200]}
 
-Return ONLY valid JSON, no markdown:
+If the topic is valid, return ONLY valid JSON matching this exact structure:
 {{
   "title": "Precise analytical title",
   "subtitle": "One-sentence descriptor",
@@ -212,12 +224,46 @@ Chapter titles must be specific to the topic content from intel, not generic."""
 
     resp = groq_client.chat.completions.create(
         model=BRAIN,
-        messages=[{"role": "user", "content": prompt}],
-        max_tokens=BRAIN_MAXTOK,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ],
+        max_tokens=4000, # Increased runway so the JSON never cuts off mid-bracket
         temperature=0.2,
         response_format={"type": "json_object"},
     )
     return json.loads(resp.choices[0].message.content)
+
+
+
+
+# def llm_outline(topic: str, intel_preview: str, word_count: int, domain: str) -> dict:
+#     n_chapters = 3 if word_count <= 900 else (5 if word_count <= 2500 else 7)
+#     wpch = max(150, word_count // n_chapters)
+
+#     prompt = f"""Topic: "{topic}"
+# Domain: {domain}
+# Target: {word_count} words | Chapters: {n_chapters}
+# Intel sample: {intel_preview[:1200]}
+
+# Return ONLY valid JSON, no markdown:
+# {{
+#   "title": "Precise analytical title",
+#   "subtitle": "One-sentence descriptor",
+#   "section_titles": ["Chapter title 1", "Chapter title 2", ...],
+#   "words_per_chapter": {wpch}
+# }}
+
+# Chapter titles must be specific to the topic content from intel, not generic."""
+
+#     resp = groq_client.chat.completions.create(
+#         model=BRAIN,
+#         messages=[{"role": "user", "content": prompt}],
+#         max_tokens=BRAIN_MAXTOK,
+#         temperature=0.2,
+#         response_format={"type": "json_object"},
+#     )
+#     return json.loads(resp.choices[0].message.content)
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  LLM — CHAPTER WRITER  (writer 8b)

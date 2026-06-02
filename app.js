@@ -160,6 +160,7 @@ window.executeGeneration = async function () {
     viewport.classList.add('loading-overlay');
     startTicker();
 
+
     try {
         const res = await fetch(`${API_BASE}/generate`, {
             method: 'POST',
@@ -170,19 +171,49 @@ window.executeGeneration = async function () {
             body: JSON.stringify({ topic })
         });
 
-        if (!res.ok) throw new Error("API Error");
+        // FIX: Grab the actual error message from FastAPI
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.detail || "Server error. It might be waking up, try again in 30 seconds.");
+        }
+
         const newReport = await res.json();
 
         input.value = '';
         loadHistory();
         renderReport(newReport);
     } catch (err) {
-        alert("Execution failed. Check backend logs or token limits.");
+        // FIX: Show the exact error (e.g., "TOPIC REJECTED") to the user
+        alert(`Execution Alert: ${err.message}`);
     } finally {
         btn.disabled = false;
         viewport.classList.remove('loading-overlay');
         stopTicker();
     }
+
+    // try {
+    //     const res = await fetch(`${API_BASE}/generate`, {
+    //         method: 'POST',
+    //         headers: {
+    //             'Content-Type': 'application/json',
+    //             'Authorization': `Bearer ${sessionToken}`
+    //         },
+    //         body: JSON.stringify({ topic })
+    //     });
+
+    //     if (!res.ok) throw new Error("API Error");
+    //     const newReport = await res.json();
+
+    //     input.value = '';
+    //     loadHistory();
+    //     renderReport(newReport);
+    // } catch (err) {
+    //     alert("Execution failed. Check backend logs or token limits.");
+    // } finally {
+    //     btn.disabled = false;
+    //     viewport.classList.remove('loading-overlay');
+    //     stopTicker();
+    // }
 }
 
 window.fetchAndDisplayReport = async function (id, btnElement) {
